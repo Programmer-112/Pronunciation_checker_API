@@ -1,4 +1,5 @@
 from io import BytesIO
+from typing import Annotated
 
 from fastapi import FastAPI, File, UploadFile, status
 from fastapi.params import Form
@@ -15,7 +16,7 @@ file_size_limit = 10 * 1024 * 1024  # 10MB
 # accept audio file not longer than file_size_limit
 # and a target string representing the words to be pronounced
 @app.post("/score-audio/")
-async def upload_audio(file: UploadFile = File(...), target: str = Form(...)):
+async def upload_audio(target:  Annotated[str, Form(...)], file: UploadFile = File(...)):
     try:
         # Validate content type
         if not file.content_type or not file.content_type.startswith('audio/'):
@@ -58,3 +59,6 @@ async def upload_audio(file: UploadFile = File(...), target: str = Form(...)):
     except Exception as e:
         print(f"ERROR: {e}", flush=True)
         raise
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
