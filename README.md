@@ -32,3 +32,12 @@ curl -X POST "http://127.0.0.1:8000/score-audio/" \
   -F "target=hello world"
 ```
 
+## Optimization Summary
+
+### Handles 900% more Request Per Second
+Before: 2.77 req/s -> After : 27.8 req/s
+
+### Improved Average Request Duration by 96%
+Before: 9.39 s -> After : 361.22 ms
+
+[Details](./loadTest.md)
