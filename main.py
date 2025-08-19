@@ -30,14 +30,7 @@ async def upload_audio(target:  Annotated[str, Form(...)], file: UploadFile = Fi
                 status_code=status.HTTP_400_BAD_REQUEST,
                 content={"error": "Target is required"}
             )
-        
-        # Validate file size
-        if file.size and file.size > file_size_limit:
-            return JSONResponse(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                content={"error": f"File size exceeds {file_size_limit / (1024 * 1024)}MB limit"}
-            )
-        
+    
         contents = await file.read()
         
         # Validate file size after reading (in case size wasn't available before)
@@ -48,7 +41,8 @@ async def upload_audio(target:  Annotated[str, Form(...)], file: UploadFile = Fi
             )
 
         audio_stream = BytesIO(contents)
-        score, transcript = scorer.score(audio_stream, target)
+        score, transcript = await scorer.async_score(audio_stream, target)
+        # score, transcript =  scorer.sync_score(audio_stream, target)
         return JSONResponse(content={
             "filename": file.filename,
             "content_type": file.content_type,
