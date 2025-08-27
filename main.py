@@ -3,11 +3,25 @@ from typing import Annotated
 from fastapi import FastAPI, File, UploadFile, status
 from fastapi.params import Form
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import ffmpeg
 from scorer import Scorer
 import re
 
+# FastAPI config
 app = FastAPI()
+origins = [
+    "http://localhost:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 version = 2
 scorer = Scorer()
 file_size_limit = 10 * 1024 * 1024  # 10MB
