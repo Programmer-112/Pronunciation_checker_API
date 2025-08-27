@@ -13,19 +13,17 @@ class Scorer:
     def calculate_score(self, expected, target):
         dist = Levenshtein.distance(expected, target)
         return max(0, 1 - dist / max(len(expected), 1))
-
-    async def async_score(self, audio_path, target):
-        recog = sr.Recognizer()
-        twords = target.lower().split()
-
-        # Run blocking audio processing in a thread
-        def process_audio():
+    
+    def process_audio(self, audio_path):
+            recog = sr.Recognizer()
             with sr.AudioFile(audio_path) as src:
                 audio_data = recog.record(src)
                 
                 return recog.recognize_google(audio_data).lower()
 
-        transcript = await asyncio.to_thread(process_audio)
+    async def async_score(self, audio_path, target):
+        twords = target.lower().split()
+        transcript = await asyncio.to_thread(self.process_audio, audio_path)
         ph_tr = sum((self.phones(w) for w in transcript.split()), [])
         ph_tgt = sum((self.phones(w) for w in twords), [])
         score = self.calculate_score("".join(ph_tgt), "".join(ph_tr))
@@ -33,11 +31,3 @@ class Scorer:
 
         return score, str(transcript)
     
-    def sync_score(self, audio_path, target):
-        recog, twords = sr.Recognizer(), target.lower().split()
-        with sr.AudioFile(audio_path) as src:
-            transcript = recog.recognize_google(recog.record(src)).lower()
-
-        ph_tr = sum((self.phones(w) for w in transcript.split()), [])
-        ph_tgt = sum((self.phones(w) for w in twords), [])
-        return self.calculate_score("".join(ph_tgt), "".join(ph_tr)), transcript
