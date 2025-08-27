@@ -4,11 +4,11 @@ from main import app
 from io import BytesIO
 
 client = TestClient(app)
-
+upload_route = "/api/v1/score/"
 class TestMainAPI:
     def test_upload_audio_missing_file(self):
         """Test upload audio with missing file"""
-        response = client.post("/score-audio/", data={"target": "hello"})
+        response = client.post(upload_route, data={"target": "hello"})
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY  # Validation error
     
     def test_upload_audio_missing_target(self):
@@ -17,7 +17,7 @@ class TestMainAPI:
         audio_content = b"mock audio content"
         files = {"file": ("test.wav", BytesIO(audio_content), "audio/wav")}
         
-        response = client.post("/score-audio/", files=files)
+        response = client.post(upload_route, files=files)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_upload_audio_invalid_file_type(self):
@@ -25,25 +25,25 @@ class TestMainAPI:
         files = {"file": ("test.txt", BytesIO(b"not audio"), "text/plain")}
         data = {"target": "hello"}
         
-        response = client.post("/score-audio/", files=files, data=data)
+        response = client.post(upload_route, files=files, data=data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
     
     def test_upload_audio_invalid_file_size(self):
         """Test upload audio with invalid file size"""
-        files = {"file": ("test.wav", BytesIO(b"a" * 11 * 1024 * 1024), "audio/wav")}
+        files = {"file": ("test.webm", BytesIO(b"a" * 11 * 1024 * 1024), "audio/webm")}
         data = {"target": "hello"}
         
-        response = client.post("/score-audio/", files=files, data=data)
+        response = client.post(upload_route, files=files, data=data)
         assert response.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
 
     def test_upload_audio_with_real_file(self):
         """Test upload audio with a real audio file"""
         # Open the actual audio file
-        with open("tests/audio/rabbit.wav", "rb") as audio_file:
-            files = {"file": ("rabbit.wav", audio_file, "audio/wav")}
-            data = {"target": "rabbit"}
+        with open("tests/audio/iloveyou.webm", "rb") as audio_file:
+            files = {"file": ("iloveyou.webm", audio_file, "audio/webm")}
+            data = {"target": "i love you"}
             
-            response = client.post("/score-audio/", files=files, data=data)
+            response = client.post(upload_route, files=files, data=data)
             assert response.status_code == status.HTTP_200_OK
             
             # Check the response structure
@@ -51,5 +51,5 @@ class TestMainAPI:
             assert "score" in result
             assert "transcript" in result
             assert "filename" in result
-            assert result["filename"] == "rabbit.wav"
+            assert result["filename"] == "iloveyou.webm"
     

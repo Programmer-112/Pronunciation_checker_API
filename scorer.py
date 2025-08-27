@@ -22,15 +22,16 @@ class Scorer:
         def process_audio():
             with sr.AudioFile(audio_path) as src:
                 audio_data = recog.record(src)
+                
                 return recog.recognize_google(audio_data).lower()
 
         transcript = await asyncio.to_thread(process_audio)
-
         ph_tr = sum((self.phones(w) for w in transcript.split()), [])
         ph_tgt = sum((self.phones(w) for w in twords), [])
         score = self.calculate_score("".join(ph_tgt), "".join(ph_tr))
+        score = round(score, 2)
 
-        return score, transcript
+        return score, str(transcript)
     
     def sync_score(self, audio_path, target):
         recog, twords = sr.Recognizer(), target.lower().split()
