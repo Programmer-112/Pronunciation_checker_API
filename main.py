@@ -27,6 +27,15 @@ scorer = Scorer()
 file_size_limit = 10 * 1024 * 1024  # 10MB
 allowed_mime_types = ["audio/webm", "video/webm"]
 
+async def read_webm_audio(file:UploadFile):
+        webm_bytes = await file.read()
+
+         # Validate file size
+        if len(webm_bytes) > file_size_limit:
+            raise ValueError("File size exceeds limit")
+
+        return webm_bytes           
+
 # accept audio file not longer than file_size_limit
 # and a target string representing the words to be pronounced
 @app.post("/api/v1/score/")
@@ -45,16 +54,7 @@ async def upload_audio(target: Annotated[str, Form(...)], file: UploadFile = Fil
                 content={"error": "Target is required"},
             )
 
-        webm_bytes = await file.read()
-
-         # Validate file size
-        if len(webm_bytes) > file_size_limit:
-            return JSONResponse(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                content={
-                    "error": f"File size exceeds {file_size_limit / (1024 * 1024)}MB limit"
-                },
-            )
+        webm_bytes= await read_webm_audio(file=file)   
 
         # Convert to wav
         out, _ = (
@@ -84,9 +84,18 @@ async def upload_audio(target: Annotated[str, Form(...)], file: UploadFile = Fil
 
         return json_response
 
+    except ValueError:
+          return JSONResponse(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                content={
+                    "error": f"File size exceeds {file_size_limit / (1024 * 1024)}MB limit"
+                },
+            )
+    
     except Exception as e:
         print(f"ERROR: {e}", flush=True)
         raise
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
