@@ -39,11 +39,14 @@ export let options = {
 };
 let payload = {
         target: "i love you",
-        file: http.file(open("../audio/iloveyou.wav", "b"), "iloveyou.wav", "audio/wav"),
+        file: http.file(open("../audio/iloveyou.webm", "b"), "iloveyou.webm", "audio/webm"),
     };
+
+const scoreRoute = "http://127.0.0.1:8000/api/v1/score/"
+const healthRoute = "http://127.0.0.1:8000/health"
 // Health endpoint
 export function health() {
-    let res = http.get("http://127.0.0.1:8000/health");
+    let res = http.get(healthRoute);
     check(res, { "health 200": (r) => r.status === 200 });
     sleep(1); // simulate human think time
 }
@@ -51,7 +54,7 @@ export function health() {
 // Score-audio endpoint with normal pacing
 export function scoreAudio() {
    
-    let res = http.post("http://127.0.0.1:8000/score-audio/", payload);
+    let res = http.post(scoreRoute, payload);
     check(res, { "status 200": (r) => r.status === 200 });
     sleep(1); // human-like pacing
 }
@@ -59,7 +62,7 @@ export function scoreAudio() {
 // Score-audio endpoint without sleep for stress testing
 export function scoreAudioNoSleep() {
     
-    let res = http.post("http://127.0.0.1:8000/score-audio/", payload);
+    let res = http.post(scoreRoute, payload);
     check(res, { "status 200": (r) => r.status === 200 });
     // no sleep, continuous load
 }
