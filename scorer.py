@@ -16,10 +16,14 @@ class Scorer:
     
     def process_audio(self, audio_path):
             recog = sr.Recognizer()
-            with sr.AudioFile(audio_path) as src:
-                audio_data = recog.record(src)
-                
-                return recog.recognize_google(audio_data).lower()
+            try:
+                with sr.AudioFile(audio_path) as src:
+                    audio_data = recog.record(src)
+                    
+                    return recog.recognize_google(audio_data).lower()
+            except sr.UnknownValueError:
+                 return ""
+                 
 
     async def async_score(self, audio_path, target):
         twords = target.lower().split()
