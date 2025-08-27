@@ -1,11 +1,14 @@
+import asyncio
 from io import BytesIO
 from typing import Annotated
+import httpx
 from fastapi import FastAPI, File, UploadFile, status
 from fastapi.params import Form
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import ffmpeg
 from scorer import Scorer
+from recognizer import Recognizer
 import re
 
 # FastAPI config
@@ -23,10 +26,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-version = 2
+# App config
+version = 1
 scorer = Scorer()
+recog = Recognizer()
 file_size_limit = 10 * 1024 * 1024  # 10MB
 allowed_mime_types = ["audio/webm", "video/webm"]
+tts_api_url = None
 
 
 async def read_webm_audio(file: UploadFile):
@@ -39,7 +45,7 @@ async def read_webm_audio(file: UploadFile):
     return webm_bytes
 
 
-async def convert_to_wav(webm_bytes:bytes):
+async def convert_to_wav(webm_bytes: bytes):
     out, _ = (
         ffmpeg.input("pipe:0")  # read from stdin
         .output("pipe:1", format="wav", acodec="pcm_s16le")  # write to stdout
@@ -49,15 +55,37 @@ async def convert_to_wav(webm_bytes:bytes):
     wav_bytes = BytesIO(out)
     return wav_bytes
 
-def process_target(target:str):
+
+def process_target(target: str):
     # remove all speical characters from target
     target = re.sub(r"[^a-zA-Z0-9 ]", "", target)
     return target
 
 
+async def transcribe(file: UploadFile) -> str:
+    if tts_api_url != None:
+        url = tts_api_url
+        async with httpx.AsyncClient() as client:
+            files = {
+                "file": (
+                    file.filename,
+                    file.file,
+                    file.content_type or "application/octet-stream",
+                )
+            }
+            response = await client.post(url, files=files)
+            json = response.json()
+        return json["text"]
+    else:
+        webm_bytes = await read_webm_audio(file=file)
+        wav_bytes = await convert_to_wav(webm_bytes)
+        text = await asyncio.to_thread(recog.process_audio, wav_bytes)
+        return text
+
+
 # accept audio file not longer than file_size_limit
 # and a target string representing the words to be pronounced
-@app.post("/api/v1/score/")
+@app.post(f"/api/v{version}/score/")
 async def upload_audio(target: Annotated[str, Form(...)], file: UploadFile = File(...)):
     target = process_target(target=target)
     try:
@@ -74,12 +102,12 @@ async def upload_audio(target: Annotated[str, Form(...)], file: UploadFile = Fil
                 content={"error": "Target is required"},
             )
 
-        webm_bytes = await read_webm_audio(file=file)
-         
-        wav_bytes = await convert_to_wav(webm_bytes)
         # remove all speical characters from target
         target = process_target(target=target)
-        score, transcript = await scorer.async_score(wav_bytes, target)
+
+        transcript = await transcribe(file)
+        # score, transcript = await scorer.async_score(wav_bytes, target)
+        score = scorer.score(transcript, target)
 
         json_response = JSONResponse(
             content={

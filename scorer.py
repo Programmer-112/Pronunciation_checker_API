@@ -13,25 +13,11 @@ class Scorer:
     def calculate_score(self, expected, target):
         dist = Levenshtein.distance(expected, target)
         return max(0, 1 - dist / max(len(expected), 1))
-    
-    def process_audio(self, audio_path):
-            recog = sr.Recognizer()
-            try:
-                with sr.AudioFile(audio_path) as src:
-                    audio_data = recog.record(src)
-                    
-                    return recog.recognize_google(audio_data).lower()
-            except sr.UnknownValueError:
-                 return ""
-                 
-
-    async def async_score(self, audio_path, target):
+            
+    def score(self, text, target):
         twords = target.lower().split()
-        transcript = await asyncio.to_thread(self.process_audio, audio_path)
-        ph_tr = sum((self.phones(w) for w in transcript.split()), [])
+        ph_tr = sum((self.phones(w) for w in text.split()), [])
         ph_tgt = sum((self.phones(w) for w in twords), [])
         score = self.calculate_score("".join(ph_tgt), "".join(ph_tr))
         score = round(score, 2)
-
-        return score, str(transcript)
-    
+        return score
