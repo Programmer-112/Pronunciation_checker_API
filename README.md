@@ -30,7 +30,7 @@ py ./run.py
 ```
 ## Example Request
 ```bash 
-curl -X POST "http://127.0.0.1:8000/score-audio/" \
+curl -X POST "http://127.0.0.1:5000/api/v1/score/" \
   -F "file=@sample.webm" \
   -F "target=hello world"
 ```
@@ -52,3 +52,7 @@ Before: 2.77 req/s -> After : 27.8 req/s
 Before: 9.39 s -> After : 361.22 ms
 
 [Details](./loadTest.md)
+
+## Future Improvements
+- Set up dedicated speech to text api as to not rely on recognizer_google.
+- Containerization for easier deployment and scalibilty
