@@ -35,6 +35,14 @@ curl -X POST "http://127.0.0.1:8000/score-audio/" \
   -F "target=hello world"
 ```
 
+## TTS Options
+By default the api uses recognize_google from speech_recognition, but you can specify a custom tts api route
+```
+# App config
+...
+tts_api_url = your_api_route
+```
+
 ## Optimization Summary
 
 ### Handles 900% more Request Per Second
