@@ -44,7 +44,6 @@ async def read_webm_audio(file: UploadFile):
 
     return webm_bytes
 
-
 async def convert_to_wav(webm_bytes: bytes):
     out, _ = (
         ffmpeg.input("pipe:0")  # read from stdin
@@ -100,13 +99,8 @@ async def upload_audio(target: Annotated[str, Form(...)], file: UploadFile = Fil
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 content={"error": "Target is required"},
-            )
-
-        # remove all speical characters from target
-        target = process_target(target=target)
-
+            )    
         transcript = await transcribe(file)
-        # score, transcript = await scorer.async_score(wav_bytes, target)
         score = scorer.score(transcript, target)
 
         json_response = JSONResponse(

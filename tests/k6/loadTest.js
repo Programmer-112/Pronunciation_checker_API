@@ -55,8 +55,9 @@ const longAudioPayload = {
   ),
 };
 
-const scoreRoute = "http://127.0.0.1:8000/api/v1/score/";
-const healthRoute = "http://127.0.0.1:8000/health";
+const port = 5000
+const scoreRoute = `http://127.0.0.1:${port}/api/v1/score/`;
+const healthRoute = `http://127.0.0.1:${port}/health`;
 // Health endpoint
 export function health() {
   let res = http.get(healthRoute);
