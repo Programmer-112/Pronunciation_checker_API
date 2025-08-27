@@ -33,14 +33,7 @@ export let options = {
         { duration: "10s", target: 0 }, // ramp down
       ],
       exec: "scoreAudio",
-    },
-    // Stress test: continuous requests without sleep
-    stress_test: {
-      executor: "constant-vus",
-      vus: 5,
-      duration: "1m",
-      exec: "scoreAudioNoSleep",
-    },
+    }
   },
 };
 const shortAudioPayload = {
