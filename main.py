@@ -1,11 +1,11 @@
 from io import BytesIO
-import json
 from typing import Annotated
 from fastapi import FastAPI, File, UploadFile, status
 from fastapi.params import Form
 from fastapi.responses import JSONResponse
 import ffmpeg
 from scorer import Scorer
+import re
 
 app = FastAPI()
 version = 2
@@ -48,8 +48,10 @@ async def upload_audio(target: Annotated[str, Form(...)], file: UploadFile = Fil
             .output("pipe:1", format="wav", acodec="pcm_s16le")  # write to stdout
             .run(input=webm_bytes, capture_stdout=True, capture_stderr=True)
         )
-        
+
         wav_bytes = BytesIO(out)
+        # remove all speical characters from target
+        target = re.sub(r'[^a-zA-Z0-9 ]', '', target)
         score, transcript = await scorer.async_score(wav_bytes, target)
 
         json_response =  JSONResponse(
