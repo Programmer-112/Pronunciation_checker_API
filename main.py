@@ -11,8 +11,30 @@ from scorer import Scorer
 from recognizer import Recognizer
 import re
 
+# App config
+app_version = "0.0.1"
+description = """
+Pronunciation Scorer API🚀
+
+## score
+
+You can **read score**.
+
+"""
+title = "Pronunciation Scorer API"
+scorer = Scorer()
+recog = Recognizer()
+file_size_limit = 10 * 1024 * 1024  # 10MB
+allowed_mime_types = ["audio/webm", "video/webm"]
+tts_api_url = None
+
 # FastAPI config
-app = FastAPI()
+app = FastAPI(
+    title=title,
+    description=description,
+    summary="Scores an audio file against a given text",
+    version=app_version,
+)
 
 origins = [
     "http://localhost:5173",
@@ -26,14 +48,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# App config
-version = 1
-scorer = Scorer()
-recog = Recognizer()
-file_size_limit = 10 * 1024 * 1024  # 10MB
-allowed_mime_types = ["audio/webm", "video/webm"]
-tts_api_url = None
-
 
 async def read_webm_audio(file: UploadFile):
     webm_bytes = await file.read()
@@ -43,6 +57,7 @@ async def read_webm_audio(file: UploadFile):
         raise ValueError("File size exceeds limit")
 
     return webm_bytes
+
 
 async def convert_to_wav(webm_bytes: bytes):
     out, _ = (
@@ -84,7 +99,7 @@ async def transcribe(file: UploadFile) -> str:
 
 # accept audio file not longer than file_size_limit
 # and a target string representing the words to be pronounced
-@app.post(f"/api/v{version}/score/")
+@app.post(f"/api/v1/score/")
 async def upload_audio(target: Annotated[str, Form(...)], file: UploadFile = File(...)):
     target = process_target(target=target)
     try:
@@ -99,7 +114,7 @@ async def upload_audio(target: Annotated[str, Form(...)], file: UploadFile = Fil
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 content={"error": "Target is required"},
-            )    
+            )
         transcript = await transcribe(file)
         score = scorer.score(transcript, target)
 
@@ -110,7 +125,6 @@ async def upload_audio(target: Annotated[str, Form(...)], file: UploadFile = Fil
                 "score": score,
                 "transcript": transcript,
                 "target": target,
-                "version": version,
             }
         )
         print(f"INFO: {file.filename} scored {score}/1.0\n")
