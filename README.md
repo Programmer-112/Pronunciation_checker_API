@@ -17,7 +17,7 @@ This is a FastAPI service that accepts an audio file (.webm) and a target string
 Install dependencies:
 
 ```bash
-pip install fastapi uvicorn
+pip install -r requirements.txt
 ```
 
 ## Start Server
